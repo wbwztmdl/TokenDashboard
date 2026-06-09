@@ -4,6 +4,11 @@ This is a **lightweight**, **zero-dependency**, and **highly extensible** token 
 The underlying principle is to read the persistent session files stored locally by the Agent frameworks and extract token consumption data. As such, it only supports frameworks that persist session logs locally, and model providers that include token details in their API response metadata. While the vast majority of frameworks and providers meet these requirements, please be aware that a few may not be supported.
 
 ---
+## Display
+<img width="2426" height="1387" alt="QQ20260610-014119" src="https://github.com/user-attachments/assets/46813e06-d2ea-4e10-9d74-5785718ea63c" />
+<img width="1904" height="895" alt="QQ20260610-014522" src="https://github.com/user-attachments/assets/0bcaf51b-2a80-4300-8fff-d10266769a61" />
+<img width="1941" height="1000" alt="QQ20260610-014745" src="https://github.com/user-attachments/assets/66b2ee84-d11f-44bc-aa97-30b6f2609aff" />
+<img width="1908" height="1201" alt="QQ20260610-015059" src="https://github.com/user-attachments/assets/edb81e4e-403d-4f2e-972c-3251a6c839f8" />
 
 ## Key Advantages
 
@@ -13,6 +18,7 @@ The underlying principle is to read the persistent session files stored locally 
 2. **Highly Extensible**:
    - **Agent Framework Extension**: Pluggable design. Simply drop a new Python parser file under the `parsers/` directory, and the backend automatically detects and registers the new framework. You can easily instruct an AI to generate this parser by referencing the logic of existing scripts.
    - **Internationalization (i18n)**: Easily add new languages by dropping a `<LanguageName>.json` under `public/lang/`. The **"Language"** dropdown at the top-right will dynamically populate and load it.
+   - **Easily Modify Rates per Million Tokens**: Update token prices via the config file or web interface based on your needs, with added support for multipliers.
 3. **Safe & Precise**:
    - Anti-noise filtering mechanisms verify message roles (e.g. counting only `assistant` roles in Claude Code) and calculate increment deltas to prevent double-counting or false parsing of user inputs.
 
