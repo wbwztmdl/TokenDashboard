@@ -230,10 +230,7 @@ class CodexParser(BaseParser):
         }
 
     def parse_sessions(self, config_manager) -> list[dict]:
-        sessions_dir = Path("E:\\codex\\.codex\\sessions")
-        if not sessions_dir.exists():
-            sessions_dir = Path.home() / ".codex" / "sessions"
-            
+        sessions_dir = Path.home() / ".codex" / "sessions"
         sessions = []
         if not sessions_dir.exists():
             return sessions

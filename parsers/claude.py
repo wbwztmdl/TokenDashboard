@@ -141,10 +141,7 @@ class ClaudeParser(BaseParser):
         }
 
     def parse_sessions(self, config_manager) -> list[dict]:
-        projects_dir = Path("E:\\claudecode\\.claude\\projects")
-        if not projects_dir.exists():
-            projects_dir = Path.home() / ".claude" / "projects"
-            
+        projects_dir = Path.home() / ".claude" / "projects"
         sessions = []
         if not projects_dir.exists():
             return sessions
