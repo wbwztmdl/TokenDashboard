@@ -10,6 +10,7 @@ The underlying principle is to read the persistent session files stored locally 
 <img width="1941" height="1000" alt="QQ20260610-014745" src="https://github.com/user-attachments/assets/66b2ee84-d11f-44bc-aa97-30b6f2609aff" />
 <img width="1908" height="1201" alt="QQ20260610-015059" src="https://github.com/user-attachments/assets/edb81e4e-403d-4f2e-972c-3251a6c839f8" />
 
+---
 ## Key Advantages
 
 1. **Lightweight & Zero-dependency**:
