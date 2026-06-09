@@ -21,6 +21,8 @@ The underlying principle is to read the persistent session files stored locally 
    - **Easily Modify Rates per Million Tokens**: Update token prices via the config file or web interface based on your needs, with added support for multipliers.
 3. **Safe & Precise**:
    - Anti-noise filtering mechanisms verify message roles (e.g. counting only `assistant` roles in Claude Code) and calculate increment deltas to prevent double-counting or false parsing of user inputs.
+4. **Real-time Updates**:
+   - The service parses the latest conversation in real time during runtime to fetch current token usage. However, a manual page refresh is required (intentional design to reduce unnecessary overhead).
 
 ---
 
