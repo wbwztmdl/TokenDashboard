@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent / "config.json"
+DEFAULT_EXCLUDE_PATHS = [str(Path.home() / "Documents" / "Codex" / "*")]
 
 class ConfigManager:
     def __init__(self, config_path=DEFAULT_CONFIG_PATH):
@@ -12,7 +13,7 @@ class ConfigManager:
     def _load(self):
         if not self.config_path.exists():
             return {
-                "exclude_paths": ["C:\\Users\\82541\\Documents\\Codex\\*"],
+                "exclude_paths": list(DEFAULT_EXCLUDE_PATHS),
                 "lang": "zh-CN",
                 "models": {}
             }
@@ -20,7 +21,7 @@ class ConfigManager:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 if "exclude_paths" not in config:
-                    config["exclude_paths"] = ["C:\\Users\\82541\\Documents\\Codex\\*"]
+                    config["exclude_paths"] = list(DEFAULT_EXCLUDE_PATHS)
                 if "lang" not in config:
                     config["lang"] = "zh-CN"
                 if "models" not in config:
@@ -29,7 +30,7 @@ class ConfigManager:
         except Exception as e:
             print(f"Error loading config: {e}")
             return {
-                "exclude_paths": ["C:\\Users\\82541\\Documents\\Codex\\*"],
+                "exclude_paths": list(DEFAULT_EXCLUDE_PATHS),
                 "lang": "zh-CN",
                 "models": {}
             }
@@ -60,7 +61,7 @@ class ConfigManager:
     def get_merged_config(self, discovered_models):
         """Returns the config, merging any discovered models with price and multiplier defaults."""
         merged = {
-            "exclude_paths": list(self.config.get("exclude_paths", ["C:\\Users\\82541\\Documents\\Codex\\*"])),
+            "exclude_paths": list(self.config.get("exclude_paths", DEFAULT_EXCLUDE_PATHS)),
             "lang": str(self.config.get("lang", "zh-CN")),
             "models": {}
         }
