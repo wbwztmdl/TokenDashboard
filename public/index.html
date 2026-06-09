@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Token Cost Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Load clean, modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar for Price Configuration -->
+        <aside class="sidebar" id="config-sidebar">
+            <div class="sidebar-header">
+                <h2 data-i18n="configTitle">单价与配置</h2>
+                <p class="subtitle" data-i18n="configSubtitle">设置各模型百万 Token 的单价 (USD)</p>
+            </div>
+            
+            <form id="config-form">
+                <div class="models-price-section">
+                    <h3 data-i18n="modelPrices">模型单价设定 (每百万 Token)</h3>
+                    <div id="models-list-container">
+                        <!-- Model price inputs will be loaded dynamically here -->
+                        <div class="loading-small" data-i18n="loadingModels">加载模型中...</div>
+                    </div>
+                </div>
+
+                <div class="models-price-section">
+                    <h3 data-i18n="excludePaths">项目统计排除路径</h3>
+                    <div class="form-group">
+                        <label for="exclude-paths-input" data-i18n="excludePathsHelp" style="font-size: 0.8rem; margin-bottom: 0.25rem;">每行输入一条路径 (支持 * 通配符)</label>
+                        <textarea id="exclude-paths-input" name="exclude_paths" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-sans); font-size: 0.8rem; background-color: #fcfbf9; resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <div class="sidebar-actions">
+                    <button type="submit" id="save-config-btn" class="btn btn-primary" data-i18n="saveConfig">保存并更新金额</button>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="app-header" style="position: relative;">
+                <!-- Language Selector Entrance floating top-right -->
+                <div class="lang-selector-container" style="position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; z-index: 100;">
+                    <label for="lang-select" style="font-weight: 500; color: var(--text-secondary);">Language:</label>
+                    <select id="lang-select" style="padding: 0.3rem 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--bg-card); color: var(--text-primary); font-family: var(--font-sans); outline: none; cursor: pointer;">
+                        <!-- Options dynamically loaded -->
+                    </select>
+                </div>
+
+                <div class="header-title">
+                    <h1 data-i18n="title">Agent Token 消耗看板</h1>
+                    <p class="subtitle" data-i18n="subtitle">监控各个 Agent 框架的 Token 用量与精细化成本</p>
+                </div>
+                <div class="quick-stats-row">
+                    <div class="quick-stat-card" id="card-total-cost">
+                        <span class="card-label" data-i18n="cardTotalCost">总计成本</span>
+                        <span class="card-value">$0.00</span>
+                    </div>
+                    <div class="quick-stat-card" id="card-total-tokens">
+                        <span class="card-label" data-i18n="cardTotalTokens">总計 Tokens</span>
+                        <span class="card-value">0</span>
+                    </div>
+                    <div class="quick-stat-card" id="card-total-sessions">
+                        <span class="card-label" data-i18n="cardTotalSessions">总对话会话数</span>
+                        <span class="card-value">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- View switcher tabs -->
+            <nav class="view-tabs" id="view-tabs-nav">
+                <button class="tab-btn active" data-view="global" id="tab-global" data-i18n="tabGlobal">全局统计</button>
+                <button class="tab-btn" data-view="framework" id="tab-framework" data-i18n="tabFramework">框架统计</button>
+                <button class="tab-btn" data-view="project" id="tab-project" data-i18n="tabProject">项目统计</button>
+                <button class="tab-btn" data-view="session" id="tab-session" data-i18n="tabSession">会话统计</button>
+            </nav>
+
+            <!-- Dashboard sections -->
+            <section class="dashboard-section active" id="view-section-global">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 data-i18n="globalAnalysis">全局用量分析</h2>
+                    </div>
+                    <div class="grid-2">
+                        <div class="stats-table-wrapper">
+                            <table class="data-table" id="global-tokens-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="tokenType">Token 类型</th>
+                                        <th class="text-right" data-i18n="count">数量</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="stats-table-wrapper">
+                            <table class="data-table" id="global-models-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="modelName">模型名称</th>
+                                        <th class="text-right" data-i18n="totalTokens">总 Tokens</th>
+                                        <th class="text-right" data-i18n="percentage">占比</th>
+                                        <th class="text-right" data-i18n="estimatedCost">预估金额</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-section" id="view-section-framework">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 data-i18n="frameworkAnalysis">框架对比分析</h2>
+                    </div>
+                    <div class="stats-table-wrapper">
+                        <table class="data-table" id="framework-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="framework">框架</th>
+                                    <th class="text-right" data-i18n="sessions">会话数</th>
+                                    <th class="text-right" data-i18n="inputTokens">输入 Tokens</th>
+                                    <th class="text-right" data-i18n="outputTokens">输出 Tokens</th>
+                                    <th class="text-right" data-i18n="cacheRead">缓存读取</th>
+                                    <th class="text-right" data-i18n="cacheHitRateCol">缓存命中率</th>
+                                    <th class="text-right" data-i18n="cacheWrite">缓存写入</th>
+                                    <th class="text-right" data-i18n="totalTokens">总 Tokens</th>
+                                    <th class="text-right" data-i18n="totalCost">总金额</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-section" id="view-section-project">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 data-i18n="projectAnalysis">项目汇总 (按工作目录)</h2>
+                        <span class="info-badge" data-i18n="excludeBadge">已排除指定目录</span>
+                    </div>
+                    <div class="stats-table-wrapper">
+                        <table class="data-table" id="project-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="cwd">工作目录 (cwd)</th>
+                                    <th class="text-right" data-i18n="sessions">会话数</th>
+                                    <th class="text-right" data-i18n="inputTokens">输入 Tokens</th>
+                                    <th class="text-right" data-i18n="outputTokens">输出 Tokens</th>
+                                    <th class="text-right" data-i18n="cacheRead">缓存读取</th>
+                                    <th class="text-right" data-i18n="cacheHitRateCol">缓存命中率</th>
+                                    <th class="text-right" data-i18n="totalTokens">总 Tokens</th>
+                                    <th class="text-right" data-i18n="totalCost">总金额</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-section" id="view-section-session">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 data-i18n="sessionDetails">会话明细列表</h2>
+                    </div>
+                    <div class="stats-table-wrapper">
+                        <table class="data-table" id="session-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="time">时间</th>
+                                    <th data-i18n="framework">框架</th>
+                                    <th data-i18n="sessionId">会话 ID</th>
+                                    <th data-i18n="cwd">工作目录 (cwd)</th>
+                                    <th class="text-right" data-i18n="totalTokens">总 Tokens</th>
+                                    <th class="text-right" data-i18n="totalCost">总金额</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-container" id="session-pagination">
+                        <!-- Pagination controls rendered dynamically -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Tooltip element -->
+    <div id="tooltip" class="tooltip-box"></div>
+
+    <!-- Script loading -->
+    <script src="app.js"></script>
+</body>
+</html>
