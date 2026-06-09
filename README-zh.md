@@ -5,7 +5,13 @@
 但仍需注意少数框架或提供商可能不支持。
 
 ---
+## 图片展示
+<img width="2426" height="1387" alt="QQ20260610-014119" src="https://github.com/user-attachments/assets/46813e06-d2ea-4e10-9d74-5785718ea63c" />
+<img width="1904" height="895" alt="QQ20260610-014522" src="https://github.com/user-attachments/assets/0bcaf51b-2a80-4300-8fff-d10266769a61" />
+<img width="1941" height="1000" alt="QQ20260610-014745" src="https://github.com/user-attachments/assets/66b2ee84-d11f-44bc-aa97-30b6f2609aff" />
+<img width="1908" height="1201" alt="QQ20260610-015059" src="https://github.com/user-attachments/assets/edb81e4e-403d-4f2e-972c-3251a6c839f8" />
 
+---
 ## 核心优势
 
 1. **零依赖与轻量化 (Lightweight)**：
@@ -14,9 +20,11 @@
 2. **高度可扩展 (Extensible)**：
    - **Agent 框架扩展**：插件化设计。只需在 `parsers/` 目录下放置一个新的 Python 解析脚本，后端便能自动识别并加载该框架。可以让AI参考现存脚本的逻辑生成。
    - **多语言扩展 (i18n)**：无需修改任何代码，在 `public/lang/` 下放入一个自定义的 `<语言文件名>.json`，右上角的 `Language` 下拉菜单便会自动装载该翻译文件。
+   - **便捷修改Token单价**：可以根据实际情况在config文件或者网页修改token价格，还支持设置倍率。
 3. **安全与准确**：
    - 精细防噪过滤，通过严格识别消息角色（如 Claude 仅统计 `assistant` 消息）与计算增量 (Delta)，完全杜绝因用户输入包含 Token 信息或日志文件重复读取导致的误差。
-
+4. **实时更新**：
+   - 服务运行时会实时解析最新对话获取最新token消耗，但需要手动刷新页面（不设计成自动刷新是为了减少不必要的开销）。
 ---
 
 ## 统计指标与多维度展示
