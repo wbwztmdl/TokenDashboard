@@ -15,6 +15,15 @@ let translations = {};
 let sessionCurrentPage = 1;
 const sessionPageSize = 10;
 
+// Single Framework detailed view state
+let singleFwState = {
+    selectedFw: '',
+    startDate: '',
+    endDate: '',
+    activePreset: 7 // Default to 7 days
+};
+let frameworkTrendChartInstance = null;
+
 // DOM Elements
 const viewTabsNav = document.getElementById('view-tabs-nav');
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -93,6 +102,87 @@ function setupEventListeners() {
         if (target) {
             hideTooltip();
         }
+    });
+
+    // Preset date buttons click
+    const presetBtns = document.querySelectorAll('#single-framework-card .preset-btn');
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const days = parseInt(e.target.getAttribute('data-days'));
+            presetBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            singleFwState.activePreset = days;
+            
+            const today = new Date();
+            const start = new Date();
+            start.setDate(today.getDate() - (days - 1));
+            
+            singleFwState.startDate = formatDateToYYYYMMDD(start);
+            singleFwState.endDate = formatDateToYYYYMMDD(today);
+            
+            document.getElementById('fw-start-date').value = singleFwState.startDate;
+            document.getElementById('fw-end-date').value = singleFwState.endDate;
+            
+            renderSingleFrameworkSection();
+        });
+    });
+
+    // Custom date picker inputs change
+    const startDateInput = document.getElementById('fw-start-date');
+    const endDateInput = document.getElementById('fw-end-date');
+    
+    const handleCustomDateChange = () => {
+        const startVal = startDateInput.value;
+        const endVal = endDateInput.value;
+        
+        if (startVal && endVal) {
+            singleFwState.startDate = startVal;
+            singleFwState.endDate = endVal;
+            singleFwState.activePreset = null;
+            
+            // De-select preset buttons
+            presetBtns.forEach(b => b.classList.remove('active'));
+            
+            renderSingleFrameworkSection();
+        }
+    };
+    
+    startDateInput.addEventListener('change', () => {
+        const startVal = startDateInput.value;
+        if (startVal) {
+            endDateInput.min = startVal;
+            if (endDateInput.value && endDateInput.value < startVal) {
+                endDateInput.value = startVal;
+            }
+        }
+        handleCustomDateChange();
+    });
+    
+    endDateInput.addEventListener('change', () => {
+        const endVal = endDateInput.value;
+        if (endVal) {
+            startDateInput.max = endVal;
+            if (startDateInput.value && startDateInput.value > endVal) {
+                startDateInput.value = endVal;
+            }
+        }
+        handleCustomDateChange();
+    });
+
+    // Framework tab switching click using delegation
+    document.getElementById('fw-tabs-container').addEventListener('click', (e) => {
+        const tab = e.target.closest('.fw-tab-btn');
+        if (!tab) return;
+        
+        const fw = tab.getAttribute('data-fw');
+        singleFwState.selectedFw = fw;
+        
+        const tabBtns = document.querySelectorAll('#fw-tabs-container .fw-tab-btn');
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+        tab.classList.add('active');
+        
+        renderSingleFrameworkSection();
     });
 }
 
@@ -221,6 +311,7 @@ async function fetchStats() {
         renderFrameworkView();
         renderProjectView();
         renderSessionView();
+        renderSingleFrameworkSection();
     } catch (error) {
         console.error('Error fetching stats:', error);
     }
@@ -733,3 +824,403 @@ function renderSessionView() {
         }
     });
 }
+
+// Single Framework detailed view helper functions
+function initSingleFwDateRange() {
+    if (!singleFwState.startDate || !singleFwState.endDate) {
+        const today = new Date();
+        const start = new Date();
+        start.setDate(today.getDate() - 6); // Default 7d (today + 6 days ago)
+        
+        singleFwState.startDate = formatDateToYYYYMMDD(start);
+        singleFwState.endDate = formatDateToYYYYMMDD(today);
+        singleFwState.activePreset = 7;
+        
+        document.getElementById('fw-start-date').value = singleFwState.startDate;
+        document.getElementById('fw-end-date').value = singleFwState.endDate;
+    }
+}
+
+function formatDateToYYYYMMDD(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function renderSingleFrameworkSection() {
+    // 1. Gather all unique frameworks from sessions
+    const frameworks = [...new Set(appData.sessions.map(s => s.framework))].sort();
+    
+    if (frameworks.length === 0) {
+        document.getElementById('single-framework-card').style.display = 'none';
+        return;
+    } else {
+        document.getElementById('single-framework-card').style.display = 'block';
+    }
+    
+    // 2. Default to first framework if none selected
+    if (!singleFwState.selectedFw || !frameworks.includes(singleFwState.selectedFw)) {
+        singleFwState.selectedFw = frameworks[0];
+    }
+    
+    // 3. Init date range values
+    initSingleFwDateRange();
+    document.getElementById('fw-end-date').min = singleFwState.startDate;
+    document.getElementById('fw-start-date').max = singleFwState.endDate;
+    
+    // 4. Render tabs
+    const tabsContainer = document.getElementById('fw-tabs-container');
+    tabsContainer.innerHTML = frameworks.map(fw => `
+        <button class="fw-tab-btn ${fw === singleFwState.selectedFw ? 'active' : ''}" data-fw="${fw}">${fw}</button>
+    `).join('');
+    
+    // 5. Filter sessions
+    const startObj = new Date(singleFwState.startDate + 'T00:00:00');
+    const endObj = new Date(singleFwState.endDate + 'T23:59:59');
+    
+    const fwSessions = appData.sessions.filter(s => {
+        if (s.framework !== singleFwState.selectedFw) return false;
+        
+        const sTime = s.start || s.end || '';
+        if (!sTime) return false;
+        
+        const sDate = new Date(sTime);
+        return sDate >= startObj && sDate <= endObj;
+    });
+    
+    // 6. Aggregate core metrics
+    let input = 0, output = 0, cacheRead = 0, cacheWrite = 0, sessionsCount = fwSessions.length, cost = 0.0;
+    const modelBreakdown = {};
+    
+    fwSessions.forEach(s => {
+        input += s.input_tokens || 0;
+        output += s.output_tokens || 0;
+        cacheRead += s.cache_read_tokens || 0;
+        cacheWrite += s.cache_write_tokens || 0;
+        cost += s.cost || 0.0;
+        
+        // Sum models for tooltip breakdown
+        for (const [model, stats] of Object.entries(s.models || {})) {
+            if (!modelBreakdown[model]) {
+                modelBreakdown[model] = {
+                    input_tokens: 0,
+                    output_tokens: 0,
+                    cache_read_tokens: 0,
+                    cache_write_tokens: 0,
+                    total_tokens: 0,
+                    cost: 0.0
+                };
+            }
+            modelBreakdown[model].input_tokens += stats.input_tokens || 0;
+            modelBreakdown[model].output_tokens += stats.output_tokens || 0;
+            modelBreakdown[model].cache_read_tokens += stats.cache_read_tokens || 0;
+            modelBreakdown[model].cache_write_tokens += stats.cache_write_tokens || 0;
+            modelBreakdown[model].total_tokens += stats.total_tokens || 0;
+            modelBreakdown[model].cost += stats.cost || 0.0;
+        }
+    });
+    
+    // Render stats card values
+    document.getElementById('fw-stat-input').textContent = formatNumber(input);
+    document.getElementById('fw-stat-output').textContent = formatNumber(output);
+    document.getElementById('fw-stat-cache-read').textContent = formatNumber(cacheRead);
+    document.getElementById('fw-stat-cache-write').textContent = formatNumber(cacheWrite);
+    
+    const hitRateStr = calculateHitRate(input, cacheRead);
+    document.getElementById('fw-stat-hit-rate').textContent = hitRateStr;
+    document.getElementById('fw-stat-hit-rate-fill').style.width = hitRateStr;
+    
+    const costEl = document.getElementById('fw-stat-cost');
+    costEl.textContent = formatCost(cost);
+    
+    // Attach model cost detail breakdown to tooltip
+    const tooltipText = getTooltipBreakdown(modelBreakdown);
+    costEl.setAttribute('data-tooltip', tooltipText);
+    
+    document.getElementById('fw-stat-sessions-count').textContent = `${formatNumber(sessionsCount)} ${t('sessions')}`;
+    
+    // 7. Render trend chart
+    renderTrendChart(fwSessions, startObj, endObj);
+}
+
+function renderTrendChart(sessions, startDate, endDate) {
+    const dateLabels = [];
+    const dateKeys = [];
+    
+    let current = new Date(startDate);
+    const end = new Date(endDate);
+    while (current <= end) {
+        const yyyy = current.getFullYear();
+        const mm = String(current.getMonth() + 1).padStart(2, '0');
+        const dd = String(current.getDate()).padStart(2, '0');
+        const key = `${yyyy}-${mm}-${dd}`;
+        dateKeys.push(key);
+        dateLabels.push(`${mm}/${dd}`);
+        current.setDate(current.getDate() + 1);
+    }
+    
+    // Daily aggregations
+    const dailyData = {};
+    dateKeys.forEach(k => {
+        dailyData[k] = {
+            input: 0,
+            output: 0,
+            cacheRead: 0,
+            cacheWrite: 0,
+            cost: 0.0
+        };
+    });
+    
+    sessions.forEach(s => {
+        const sTime = s.start || s.end || '';
+        if (!sTime) return;
+        
+        const dt = new Date(sTime);
+        const yyyy = dt.getFullYear();
+        const mm = String(dt.getMonth() + 1).padStart(2, '0');
+        const dd = String(dt.getDate()).padStart(2, '0');
+        const key = `${yyyy}-${mm}-${dd}`;
+        
+        if (dailyData[key]) {
+            dailyData[key].input += s.input_tokens || 0;
+            dailyData[key].output += s.output_tokens || 0;
+            dailyData[key].cacheRead += s.cache_read_tokens || 0;
+            dailyData[key].cacheWrite += s.cache_write_tokens || 0;
+            dailyData[key].cost += s.cost || 0.0;
+        }
+    });
+    
+    const inputDataset = [];
+    const outputDataset = [];
+    const cacheReadDataset = [];
+    const cacheWriteDataset = [];
+    const costDataset = [];
+    
+    dateKeys.forEach(k => {
+        inputDataset.push(dailyData[k].input);
+        outputDataset.push(dailyData[k].output);
+        cacheReadDataset.push(dailyData[k].cacheRead);
+        cacheWriteDataset.push(dailyData[k].cacheWrite);
+        costDataset.push(dailyData[k].cost);
+    });
+    
+    if (frameworkTrendChartInstance) {
+        frameworkTrendChartInstance.destroy();
+    }
+    
+    const chartCanvas = document.getElementById('framework-trend-chart');
+    if (!chartCanvas) return;
+    
+    const ctx = chartCanvas.getContext('2d');
+    
+    // Create soft gradients matching Morandi aesthetic
+    const createGradient = (color1, color2) => {
+        const grad = ctx.createLinearGradient(0, 0, 0, 300);
+        grad.addColorStop(0, color1);
+        grad.addColorStop(1, color2);
+        return grad;
+    };
+    
+    const inputGrad = createGradient('rgba(147, 162, 176, 0.25)', 'rgba(147, 162, 176, 0.01)'); // 雾霾蓝
+    const outputGrad = createGradient('rgba(184, 163, 143, 0.25)', 'rgba(184, 163, 143, 0.01)'); // 暖灰褐
+    const readGrad = createGradient('rgba(138, 154, 134, 0.25)', 'rgba(138, 154, 134, 0.01)'); // 灰绿
+    const writeGrad = createGradient('rgba(196, 154, 136, 0.25)', 'rgba(196, 154, 136, 0.01)'); // 陶土红
+    
+    frameworkTrendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: [
+                {
+                    label: t('input') || 'Input',
+                    data: inputDataset,
+                    borderColor: '#93a2b0', // 雾霾蓝
+                    backgroundColor: inputGrad,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    yAxisID: 'y'
+                },
+                {
+                    label: t('output') || 'Output',
+                    data: outputDataset,
+                    borderColor: '#b8a38f', // 暖灰褐
+                    backgroundColor: outputGrad,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    yAxisID: 'y'
+                },
+                {
+                    label: t('cacheReadLabel') || 'Cache Read',
+                    data: cacheReadDataset,
+                    borderColor: '#8a9a86', // 灰绿
+                    backgroundColor: readGrad,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    yAxisID: 'y'
+                },
+                {
+                    label: t('cacheWriteLabel') || 'Cache Write',
+                    data: cacheWriteDataset,
+                    borderColor: '#c49a88', // 陶土红
+                    backgroundColor: writeGrad,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    yAxisID: 'y'
+                },
+                {
+                    label: (t('totalCost') || 'Cost') + ' (USD)',
+                    data: costDataset,
+                    borderColor: '#d06a4c', // 陶土红偏深突出
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4,
+                    borderWidth: 2.5,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            elements: {
+                point: {
+                    radius: 0,
+                    hoverRadius: 5
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        font: {
+                            family: 'var(--font-sans)',
+                            size: 11
+                        },
+                        color: 'var(--text-secondary)'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(60, 64, 61, 0.95)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#e3e2de',
+                    titleFont: {
+                        family: 'var(--font-sans)',
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        family: 'var(--font-sans)'
+                    },
+                    padding: 10,
+                    borderRadius: 6,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.dataset.yAxisID === 'y1') {
+                                label += '$' + context.parsed.y.toFixed(6);
+                            } else {
+                                label += formatNumber(context.parsed.y);
+                            }
+                            return label;
+                        },
+                        afterBody: function(tooltipItems) {
+                            if (!tooltipItems.length) return '';
+                            const dataIndex = tooltipItems[0].dataIndex;
+                            const inputVal = inputDataset[dataIndex] || 0;
+                            const readVal = cacheReadDataset[dataIndex] || 0;
+                            const totalInput = inputVal + readVal;
+                            const rate = totalInput > 0 ? ((readVal / totalInput) * 100).toFixed(1) + '%' : '0.0%';
+                            return '\n' + (translations['cacheHitRateCol'] || 'Cache Hit Rate') + ': ' + rate;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: 'var(--text-secondary)',
+                        font: {
+                            family: 'var(--font-sans)',
+                            size: 10
+                        }
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Tokens',
+                        color: 'var(--text-secondary)',
+                        font: {
+                            family: 'var(--font-sans)',
+                            size: 11,
+                            weight: 500
+                        }
+                    },
+                    grid: {
+                        color: '#f0ede9'
+                    },
+                    ticks: {
+                        color: 'var(--text-secondary)',
+                        font: {
+                            family: 'var(--font-sans)',
+                            size: 10
+                        },
+                        callback: function(value) {
+                            if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                            if (value >= 1e3) return (value / 1e3).toFixed(0) + 'k';
+                            return value;
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Cost (USD)',
+                        color: 'var(--text-secondary)',
+                        font: {
+                            family: 'var(--font-sans)',
+                            size: 11,
+                            weight: 500
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: 'var(--text-secondary)',
+                        font: {
+                            family: 'var(--font-sans)',
+                            size: 10
+                        },
+                        callback: function(value) {
+                            return '$' + value.toFixed(4);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
