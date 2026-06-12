@@ -7,6 +7,7 @@ The underlying principle is to read the persistent session files stored locally 
 ## Display
 <img width="2426" height="1387" alt="QQ20260610-014119" src="https://github.com/user-attachments/assets/46813e06-d2ea-4e10-9d74-5785718ea63c" />
 <img width="1904" height="895" alt="QQ20260610-014522" src="https://github.com/user-attachments/assets/0bcaf51b-2a80-4300-8fff-d10266769a61" />
+<img width="1805" height="1706" alt="b883c123-b7a9-40fa-bb2c-5f6f2ef60b01" src="https://github.com/user-attachments/assets/002a5f2c-3549-49bc-a46b-fcec7591acf4" />
 <img width="1941" height="1000" alt="QQ20260610-014745" src="https://github.com/user-attachments/assets/66b2ee84-d11f-44bc-aa97-30b6f2609aff" />
 <img width="1908" height="1201" alt="QQ20260610-015059" src="https://github.com/user-attachments/assets/edb81e4e-403d-4f2e-972c-3251a6c839f8" />
 
