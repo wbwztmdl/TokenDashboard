@@ -61,5 +61,13 @@
   "cacheWriteLabel": "Cache Write",
   "modelMultiplier": "Multiplier",
   "modelSubtotal": "Subtotal",
-  "totalAmount": "Total Amount"
+  "totalAmount": "Total Amount",
+  "singleFwAnalysis": "Single Framework Analysis",
+  "preset1d": "1d",
+  "preset7d": "7d",
+  "preset15d": "15d",
+  "preset30d": "30d",
+  "startDateLabel": "Start",
+  "endDateLabel": "End",
+  "usageTrend": "Usage Trend"
 }

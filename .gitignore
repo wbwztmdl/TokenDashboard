@@ -6,6 +6,7 @@ __pycache__/
 # Local configuration files
 config.json
 .playwright-mcp/
+.playwright-cli/
 
 # IDE files
 .idea/

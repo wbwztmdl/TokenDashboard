@@ -146,6 +146,78 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- 新增：单框架用量与趋势分析模块 -->
+                <div class="card" style="margin-top: 1.5rem;" id="single-framework-card">
+                    <div class="card-header single-fw-header">
+                        <h2 data-i18n="singleFwAnalysis">单框架用量与趋势分析</h2>
+                        
+                        <!-- 快速筛选和自定义日期容器 -->
+                        <div class="filter-controls">
+                            <!-- 快捷日期选择 -->
+                            <div class="preset-dates">
+                                <button type="button" class="preset-btn" data-days="1" data-i18n="preset1d">1天</button>
+                                <button type="button" class="preset-btn active" data-days="7" data-i18n="preset7d">7天</button>
+                                <button type="button" class="preset-btn" data-days="15" data-i18n="preset15d">15天</button>
+                                <button type="button" class="preset-btn" data-days="30" data-i18n="preset30d">30天</button>
+                            </div>
+                            
+                            <!-- 日期输入框 -->
+                            <div class="date-range-picker">
+                                <label for="fw-start-date" data-i18n="startDateLabel">开始</label>
+                                <input type="date" id="fw-start-date" class="date-input">
+                                <label for="fw-end-date" data-i18n="endDateLabel">结束</label>
+                                <input type="date" id="fw-end-date" class="date-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 框架选择导航标签栏 -->
+                    <div class="fw-nav-tabs" id="fw-tabs-container">
+                        <!-- 动态加载的框架按钮 -->
+                    </div>
+
+                    <!-- 核心指标卡片面板 -->
+                    <div class="fw-stats-grid">
+                        <div class="fw-stat-card">
+                            <span class="fw-stat-label" data-i18n="inputTokens">输入 Tokens</span>
+                            <span class="fw-stat-value" id="fw-stat-input">0</span>
+                        </div>
+                        <div class="fw-stat-card">
+                            <span class="fw-stat-label" data-i18n="outputTokens">输出 Tokens</span>
+                            <span class="fw-stat-value" id="fw-stat-output">0</span>
+                        </div>
+                        <div class="fw-stat-card">
+                            <span class="fw-stat-label" data-i18n="cacheRead">缓存读取</span>
+                            <span class="fw-stat-value" id="fw-stat-cache-read">0</span>
+                        </div>
+                        <div class="fw-stat-card">
+                            <span class="fw-stat-label" data-i18n="cacheWrite">缓存写入</span>
+                            <span class="fw-stat-value" id="fw-stat-cache-write">0</span>
+                        </div>
+                        <div class="fw-stat-card">
+                            <span class="fw-stat-label" data-i18n="cacheHitRateCol">缓存命中率</span>
+                            <span class="fw-stat-value" id="fw-stat-hit-rate">0.0%</span>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="fw-stat-hit-rate-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="fw-stat-card fw-stat-card-highlight">
+                            <span class="fw-stat-label" data-i18n="totalCost">总金额</span>
+                            <!-- 悬浮 Portal Tooltip 明细绑定 -->
+                            <span class="fw-stat-value cost-value" id="fw-stat-cost" data-tooltip="">$0.00</span>
+                            <span class="fw-stat-sub" id="fw-stat-sessions-count">0 sessions</span>
+                        </div>
+                    </div>
+
+                    <!-- 使用趋势图表 -->
+                    <div class="fw-chart-container">
+                        <div class="fw-chart-title" data-i18n="usageTrend">使用趋势</div>
+                        <div class="canvas-wrapper" style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="framework-trend-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section class="dashboard-section" id="view-section-project">
@@ -210,6 +282,7 @@
     <div id="tooltip" class="tooltip-box"></div>
 
     <!-- Script loading -->
+    <script src="lib/chart.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

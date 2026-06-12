@@ -61,5 +61,13 @@
   "cacheWriteLabel": "缓存写",
   "modelMultiplier": "倍率因子",
   "modelSubtotal": "单模小计",
-  "totalAmount": "总计金额"
+  "totalAmount": "总计金额",
+  "singleFwAnalysis": "单框架用量与趋势分析",
+  "preset1d": "1天",
+  "preset7d": "7天",
+  "preset15d": "15天",
+  "preset30d": "30天",
+  "startDateLabel": "开始",
+  "endDateLabel": "结束",
+  "usageTrend": "使用趋势"
 }
