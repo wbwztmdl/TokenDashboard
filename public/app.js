@@ -83,6 +83,24 @@ function setupEventListeners() {
         await saveConfigData();
     });
 
+    // Toggle sidebar click handler
+    document.getElementById('toggle-sidebar-btn').addEventListener('click', async () => {
+        const sidebar = document.getElementById('config-sidebar');
+        const btn = document.getElementById('toggle-sidebar-btn');
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        
+        // Update tooltip and translation attribute
+        btn.setAttribute('data-tooltip', isCollapsed ? t('tooltipExpand') : t('tooltipCollapse'));
+        btn.setAttribute('data-i18n-tooltip', isCollapsed ? 'tooltipExpand' : 'tooltipCollapse');
+        
+        // Immediately show the new tooltip text if currently hovered
+        if (tooltipEl.classList.contains('active')) {
+            tooltipEl.textContent = isCollapsed ? t('tooltipExpand') : t('tooltipCollapse');
+        }
+        
+        await saveConfigData();
+    });
+
     // Portal Tooltip Event Listeners using event delegation
     document.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
@@ -218,6 +236,7 @@ async function saveConfigData() {
     const payload = {
         exclude_paths: excludePaths,
         lang: document.getElementById('lang-select').value,
+        sidebar_collapsed: document.getElementById('config-sidebar').classList.contains('collapsed'),
         models: models
     };
 
@@ -301,6 +320,21 @@ async function fetchStats() {
         // Translate static HTML items
         applyTranslations();
 
+        // Apply Sidebar Collapsed Config
+        const sidebar = document.getElementById('config-sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar-btn');
+        const sidebarCollapsed = appData.config.sidebar_collapsed || false;
+        
+        if (sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            toggleBtn.setAttribute('data-tooltip', translations['tooltipExpand'] || '展开侧边栏');
+            toggleBtn.setAttribute('data-i18n-tooltip', 'tooltipExpand');
+        } else {
+            sidebar.classList.remove('collapsed');
+            toggleBtn.setAttribute('data-tooltip', translations['tooltipCollapse'] || '收起侧边栏');
+            toggleBtn.setAttribute('data-i18n-tooltip', 'tooltipCollapse');
+        }
+
         // Reset page back to 1 on reload
         sessionCurrentPage = 1;
 
@@ -341,6 +375,14 @@ function applyTranslations() {
             el.textContent = translations[key];
         }
     });
+
+    const tooltipElements = document.querySelectorAll('[data-i18n-tooltip]');
+    tooltipElements.forEach(el => {
+        const key = el.getAttribute('data-i18n-tooltip');
+        if (translations[key]) {
+            el.setAttribute('data-tooltip', translations[key]);
+        }
+    });
 }
 
 // Format numbers
@@ -355,8 +397,8 @@ function formatCost(cost) {
 }
 
 // Calculate Cache Hit Rate
-function calculateHitRate(input, cacheRead) {
-    const totalInput = input + cacheRead;
+function calculateHitRate(input, cacheRead, cacheWrite = 0) {
+    const totalInput = input + cacheRead + cacheWrite;
     if (totalInput === 0) return '0.0%';
     return ((cacheRead / totalInput) * 100).toFixed(1) + '%';
 }
@@ -503,7 +545,7 @@ function renderGlobalView() {
     });
     
     const totalTokens = input + output + cacheRead + cacheWrite;
-    const hitRate = calculateHitRate(input, cacheRead);
+    const hitRate = calculateHitRate(input, cacheRead, cacheWrite);
     
     // Render Tokens Table
     const tokenTableBody = document.querySelector('#global-tokens-table tbody');
@@ -627,7 +669,7 @@ function renderFrameworkView() {
     let html = '';
     Object.entries(fwStats).forEach(([fw, stats]) => {
         const tooltip = getTooltipBreakdown(stats.models);
-        const hitRate = calculateHitRate(stats.input, stats.cacheRead);
+        const hitRate = calculateHitRate(stats.input, stats.cacheRead, stats.cacheWrite);
         html += `
             <tr>
                 <td><span class="badge ${fw === 'Claude Code' ? 'badge-claude' : 'badge-codex'}">${fw}</span></td>
@@ -676,6 +718,7 @@ function renderProjectView() {
                 input: 0,
                 output: 0,
                 cacheRead: 0,
+                cacheWrite: 0,
                 total: 0,
                 cost: 0.0,
                 models: {}
@@ -687,6 +730,7 @@ function renderProjectView() {
         p.input += s.input_tokens;
         p.output += s.output_tokens;
         p.cacheRead += s.cache_read_tokens;
+        p.cacheWrite += s.cache_write_tokens || 0;
         p.total += s.total_tokens;
         p.cost += s.cost;
         
@@ -723,7 +767,7 @@ function renderProjectView() {
     let html = '';
     sortedProjects.forEach(p => {
         const tooltip = getTooltipBreakdown(p.models);
-        const hitRate = calculateHitRate(p.input, p.cacheRead);
+        const hitRate = calculateHitRate(p.input, p.cacheRead, p.cacheWrite);
         
         html += `
             <tr>
@@ -782,8 +826,8 @@ function renderSessionView() {
             } catch(e) {}
         }
         
-        const hitRate = calculateHitRate(s.input_tokens, s.cache_read_tokens);
-        const tokensTooltip = `${t('input')}: ${formatNumber(s.input_tokens)}\n${t('output')}: ${formatNumber(s.output_tokens)}\n${t('cacheReadLabel')}: ${formatNumber(s.cache_read_tokens)}\n${t('cacheHitRateCol')}: ${hitRate}`;
+        const hitRate = calculateHitRate(s.input_tokens, s.cache_read_tokens, s.cache_write_tokens);
+        const tokensTooltip = `${t('input')}: ${formatNumber(s.input_tokens)}\n${t('output')}: ${formatNumber(s.output_tokens)}\n${t('cacheReadLabel')}: ${formatNumber(s.cache_read_tokens)}\n${t('cacheWriteLabel')}: ${formatNumber(s.cache_write_tokens || 0)}\n${t('cacheHitRateCol')}: ${hitRate}`;
             
         html += `
             <tr>
@@ -927,7 +971,7 @@ function renderSingleFrameworkSection() {
     document.getElementById('fw-stat-cache-read').textContent = formatNumber(cacheRead);
     document.getElementById('fw-stat-cache-write').textContent = formatNumber(cacheWrite);
     
-    const hitRateStr = calculateHitRate(input, cacheRead);
+    const hitRateStr = calculateHitRate(input, cacheRead, cacheWrite);
     document.getElementById('fw-stat-hit-rate').textContent = hitRateStr;
     document.getElementById('fw-stat-hit-rate-fill').style.width = hitRateStr;
     

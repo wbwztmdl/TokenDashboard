@@ -16,10 +16,17 @@ from parsers.base import BaseParser
 PORT = 8000
 PUBLIC_DIR = Path(__file__).parent / "public"
 
+_cached_parsers = None
+
 def load_parsers():
+    global _cached_parsers
+    if _cached_parsers is not None:
+        return _cached_parsers
+
     parsers = []
     parsers_dir = Path(__file__).parent / "parsers"
     if not parsers_dir.exists():
+        _cached_parsers = parsers
         return parsers
         
     for finder, name, ispkg in pkgutil.iter_modules([str(parsers_dir)]):
@@ -33,9 +40,9 @@ def load_parsers():
                 attr = getattr(module, attr_name)
                 if isinstance(attr, type) and issubclass(attr, BaseParser) and attr is not BaseParser:
                     parsers.append(attr())
-                    print(f"Loaded parser: {attr_name} ({name})")
         except Exception as e:
             print(f"Error loading parser parsers.{name}: {e}")
+    _cached_parsers = parsers
     return parsers
 
 def get_available_languages():
@@ -50,6 +57,10 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         self.config_manager = ConfigManager()
         self.parsers = load_parsers()
         super().__init__(*args, **kwargs)
+
+    def log_message(self, format, *args):
+        # Suppress logging to keep terminal clean
+        pass
 
     def translate_path(self, path):
         # Serve static files from PUBLIC_DIR instead of root directory
@@ -67,9 +78,44 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_api_stats()
         elif self.path == "/api/config":
             self._handle_api_config_get()
+        elif self.path in ("/", "/index.html"):
+            self._serve_index_html()
         else:
             # Serve static files
             super().do_GET()
+
+    def _serve_index_html(self):
+        try:
+            index_path = PUBLIC_DIR / "index.html"
+            if not index_path.exists():
+                self.send_error(404, "index.html not found")
+                return
+
+            with open(index_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
+
+            # Read configuration to get sidebar state
+            config = self.config_manager.config
+            sidebar_collapsed = config.get("sidebar_collapsed", False)
+
+            if sidebar_collapsed:
+                # Replace the sidebar class dynamically to prevent client-side flash
+                html_content = html_content.replace(
+                    '<aside class="sidebar" id="config-sidebar">',
+                    '<aside class="sidebar collapsed" id="config-sidebar">'
+                )
+
+            response_bytes = html_content.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(response_bytes)))
+            # Disable caching for index.html to ensure it always reflects the latest config state
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.end_headers()
+            self.wfile.write(response_bytes)
+        except Exception as e:
+            print(f"Error serving index.html: {e}")
+            self.send_error(500, str(e))
 
     def do_POST(self):
         if self.path == "/api/config":
@@ -170,7 +216,7 @@ def main():
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\nShutting down server...")
+            print("\nShutted down server!")
 
 if __name__ == "__main__":
     main()

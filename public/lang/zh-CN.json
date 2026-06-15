@@ -69,5 +69,7 @@
   "preset30d": "30天",
   "startDateLabel": "开始",
   "endDateLabel": "结束",
-  "usageTrend": "使用趋势"
+  "usageTrend": "使用趋势",
+  "tooltipCollapse": "收起侧边栏",
+  "tooltipExpand": "展开侧边栏"
 }

@@ -30,6 +30,7 @@ class ClaudeParser(BaseParser):
         models_breakdown = {}
         
         timestamps = []
+        processed_messages = set()
         
         try:
             with open(filepath, "r", encoding="utf-8", errors="replace") as f:
@@ -59,6 +60,12 @@ class ClaudeParser(BaseParser):
                     # Only parse "assistant" records for token usage to avoid user dialog spoofing
                     if record_type == "assistant":
                         msg = data.get("message", {})
+                        msg_id = msg.get("id")
+                        if msg_id:
+                            if msg_id in processed_messages:
+                                continue
+                            processed_messages.add(msg_id)
+                            
                         usage = msg.get("usage", {})
                         model = msg.get("model", "")
                         

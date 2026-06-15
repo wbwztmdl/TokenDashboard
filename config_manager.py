@@ -15,6 +15,7 @@ class ConfigManager:
             return {
                 "exclude_paths": list(DEFAULT_EXCLUDE_PATHS),
                 "lang": "zh-CN",
+                "sidebar_collapsed": False,
                 "models": {}
             }
         try:
@@ -24,6 +25,8 @@ class ConfigManager:
                     config["exclude_paths"] = list(DEFAULT_EXCLUDE_PATHS)
                 if "lang" not in config:
                     config["lang"] = "zh-CN"
+                if "sidebar_collapsed" not in config:
+                    config["sidebar_collapsed"] = False
                 if "models" not in config:
                     config["models"] = {}
                 return config
@@ -40,6 +43,7 @@ class ConfigManager:
             self.config = {
                 "exclude_paths": list(config_data.get("exclude_paths", [])),
                 "lang": str(config_data.get("lang", "zh-CN")),
+                "sidebar_collapsed": bool(config_data.get("sidebar_collapsed", False)),
                 "models": {}
             }
             models_data = config_data.get("models", {})
@@ -63,6 +67,7 @@ class ConfigManager:
         merged = {
             "exclude_paths": list(self.config.get("exclude_paths", DEFAULT_EXCLUDE_PATHS)),
             "lang": str(self.config.get("lang", "zh-CN")),
+            "sidebar_collapsed": bool(self.config.get("sidebar_collapsed", False)),
             "models": {}
         }
         

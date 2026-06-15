@@ -50,6 +50,36 @@ body {
     position: sticky;
     top: 0;
     overflow-y: auto;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-right 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-right: none;
+    overflow: hidden;
+}
+
+.toggle-sidebar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.toggle-sidebar-btn:hover {
+    background-color: var(--border-color);
+    color: var(--accent-olive);
+    border-color: var(--accent-olive);
 }
 
 .sidebar-header {

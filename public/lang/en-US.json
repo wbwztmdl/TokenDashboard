@@ -69,5 +69,7 @@
   "preset30d": "30d",
   "startDateLabel": "Start",
   "endDateLabel": "End",
-  "usageTrend": "Usage Trend"
+  "usageTrend": "Usage Trend",
+  "tooltipCollapse": "Collapse Sidebar",
+  "tooltipExpand": "Expand Sidebar"
 }
