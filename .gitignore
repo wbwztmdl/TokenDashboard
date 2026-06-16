@@ -16,3 +16,7 @@ config.json
 *.njsproj
 *.sln
 *.swp
+
+# Stack dump files
+*.stackdump
+
