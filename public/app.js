@@ -796,10 +796,10 @@ function renderSessionView() {
         return;
     }
     
-    // Sort by start time descending
+    // Sort by last turn time descending
     const sortedSessions = [...appData.sessions].sort((a, b) => {
-        const timeA = a.start || a.end || '';
-        const timeB = b.start || b.end || '';
+        const timeA = a.end || a.start || '';
+        const timeB = b.end || b.start || '';
         return timeB.localeCompare(timeA);
     });
 
@@ -819,9 +819,10 @@ function renderSessionView() {
         
         // Formatting timestamp for display
         let dateStr = '未知时间';
-        if (s.start) {
+        const displayTime = s.end || s.start;
+        if (displayTime) {
             try {
-                const dt = new Date(s.start);
+                const dt = new Date(displayTime);
                 dateStr = dt.toLocaleString('zh-CN', { hour12: false });
             } catch(e) {}
         }
@@ -926,7 +927,7 @@ function renderSingleFrameworkSection() {
     const fwSessions = appData.sessions.filter(s => {
         if (s.framework !== singleFwState.selectedFw) return false;
         
-        const sTime = s.start || s.end || '';
+        const sTime = s.end || s.start || '';
         if (!sTime) return false;
         
         const sDate = new Date(sTime);
@@ -1017,7 +1018,7 @@ function renderTrendChart(sessions, startDate, endDate) {
     });
     
     sessions.forEach(s => {
-        const sTime = s.start || s.end || '';
+        const sTime = s.end || s.start || '';
         if (!sTime) return;
         
         const dt = new Date(sTime);
